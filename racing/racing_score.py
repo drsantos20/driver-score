@@ -1,8 +1,11 @@
 from datetime import datetime, timedelta
 
 
-def _convert_to_datetime(lap):
-    return datetime.strptime(lap, '%M:%S.%f').time()
+def _convert_lap_time_to_datetime(lap):
+    try:
+        return datetime.strptime(lap, '%M:%S.%f').time()
+    except ValueError:
+        raise ValueError("invalid date")
 
 
 def read_file(file):
@@ -17,18 +20,20 @@ def read_file(file):
             driver_cod = fields[1]
             driver_name = fields[3]
             lap_number = fields[4]
-            lap_time = _convert_to_datetime(lap=fields[5])
+            lap_time = _convert_lap_time_to_datetime(lap=fields[5])
 
             lap_time_by_driver(driver_cod, driver_name, driver_position_by_lap_time, lap_number, lap_time)
-
             laps_result = reader.readline()
 
-            get_driver_result(driver_final_score, driver_position_by_lap_time)
+            get_final_result_by_driver_laps(driver_final_score, driver_position_by_lap_time)
+    return final_results(driver_final_score)
 
-    print('Winner', min(driver_final_score, key=driver_final_score.get))
+
+def final_results(driver_final_score):
     classification_by_time = sorted(driver_final_score.items(), key=lambda kv: kv[1])
-
-    print(classification_by_time)
+    for i, val in enumerate(classification_by_time):
+        i +=1
+    return classification_by_time
 
 
 def lap_time_by_driver(driver_cod, driver_name, driver_position_by_lap_time, lap_number, lap_time):
@@ -57,7 +62,7 @@ def lap_time_by_driver(driver_cod, driver_name, driver_position_by_lap_time, lap
         })
 
 
-def get_driver_result(driver_final_score, driver_position_by_lap_time):
+def get_final_result_by_driver_laps(driver_final_score, driver_position_by_lap_time):
     for driver in driver_position_by_lap_time:
         if len(driver_position_by_lap_time[driver]['lap']) > 3:
             sum_of_laps = [val.total_seconds() for driver_laps in driver_position_by_lap_time[driver]['lap'] for val
